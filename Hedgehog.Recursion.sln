@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29306.81
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Hedgehog.Recursion", "Hedgehog.Recursion\Hedgehog.Recursion.fsproj", "{F9259163-8A4C-47BF-8EAF-986F521F0D60}"
+EndProject
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Hedgehog.Recursion.Tests", "Hedgehog.Recursion.Tests\Hedgehog.Recursion.Tests.fsproj", "{5EBC2BBF-BCF4-4352-B083-F7E2070F2954}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F9259163-8A4C-47BF-8EAF-986F521F0D60}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F9259163-8A4C-47BF-8EAF-986F521F0D60}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F9259163-8A4C-47BF-8EAF-986F521F0D60}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F9259163-8A4C-47BF-8EAF-986F521F0D60}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5EBC2BBF-BCF4-4352-B083-F7E2070F2954}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5EBC2BBF-BCF4-4352-B083-F7E2070F2954}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5EBC2BBF-BCF4-4352-B083-F7E2070F2954}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5EBC2BBF-BCF4-4352-B083-F7E2070F2954}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {7C77AC05-1EFE-4F3A-A0F0-0A74A09D55C8}
+	EndGlobalSection
+EndGlobal
