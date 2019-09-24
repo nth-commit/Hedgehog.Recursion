@@ -18,11 +18,6 @@ module List =
     //  e.g. [x; y] |> List.cartesianPairwise |> (=) [(x, y)]
     let cartesianPairwise (list : 'a list) = list |> cartesianPairwiseSequence |> Seq.toList
 
-    // Generates the cartesian product of a list
-    //  e.g. [x; y] |> List.cartesianOrderedPairwise |> (=) [(x, y); (y, x)]
-    let cartesianOrderedPairwise (list : 'a list) =
-        (list |> cartesianPairwise) @ (list |> List.rev |> cartesianPairwise)
-
 module Tree =
 
     let rec toRoseTree (Node (x, xs)) =
