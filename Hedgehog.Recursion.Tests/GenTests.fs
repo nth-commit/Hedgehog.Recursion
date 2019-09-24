@@ -18,6 +18,11 @@ module List =
     //  e.g. [x; y] |> List.cartesianPairwise |> (=) [(x, y)]
     let cartesianPairwise (list : 'a list) = list |> cartesianPairwiseSequence |> Seq.toList
 
+    let variance list =
+        list
+        |> List.distinct
+        |> List.length
+
 module Tree =
 
     let rec toRoseTree (Node (x, xs)) =
@@ -71,17 +76,17 @@ module Gen =
             |> List.item (i % (candidates |> List.length))
         |> ofSequence
 
-    let child _ (parent : string option) =
-        roundRobin ['a' .. 'z']
-        |> Gen.map string
-        |> Gen.map (fun x -> (parent |> Option.defaultValue "") + x)
+let child _ (parent : string option) =
+   Gen.roundRobin ['a' .. 'z']
+    |> Gen.map string
+    |> Gen.map (fun x -> (parent |> Option.defaultValue "") + x)
 
 let treeOfSize degree height = gen {
-    let node = Gen.child ()
+    let node = child ()
     return! Gen.treeOfSize node degree height }
 
 let tree = gen {
-    let node = Gen.child ()
+    let node = child ()
     let degree = Range.exponential 1 6
     let height = Range.exponential 1 6
     return! Gen.tree node degree height }
@@ -105,8 +110,8 @@ let ``degree = 1, height = M -> generates tree with M nodes`` () =
 [<Fact>]
 let ``degree = N, height = M -> generates tree with Σ (m = [0 .. (M - 1)]) (N ^ m) nodes`` () =
     Property.check <| property {
-        let! degree = Gen.eIntegral 1 5
-        let! height = Gen.eIntegral 1 5
+        let! degree = Gen.eIntegral 1 6
+        let! height = Gen.eIntegral 1 6
         let! tree = treeOfSize degree height
         let nodes = tree |> RoseTree.traverseNodes
         let expectedLength =
@@ -159,22 +164,6 @@ let ``sibling outcomes are unique`` () =
             |> List.map (fun x -> (x, List.cartesianPairwise x))
             |> List.filter (snd >> List.exists (fun (x, y) -> RoseTree.areEqual x y))
             |> List.map fst
-        test <@ violations |> List.isEmpty @> }
-
-[<Fact>]
-let ``left-most sibling outcome is also the smallest`` () =
-    // Implies that we should go to the most trivial shrink first
-    Property.check <| property {
-        let! tree = tree |> Gen.meta
-        let violations =
-            tree
-            |> traverseSiblingOutcomes
-            |> List.filter (fun xs ->
-                let sizes = xs |> List.map RoseTree.size
-                let leftMostSize = sizes |> List.head
-                sizes
-                |> List.tail
-                |> List.exists (fun size -> leftMostSize > size))
         test <@ violations |> List.isEmpty @> }
 
 [<Fact>]
@@ -306,3 +295,22 @@ let ``degree = N, height = M -> generates expected number of outcomes`` () =
         |> Tree.traverseOutcomes
         |> List.distinct
         |> testLengthsEquals (calculateOutcomeCounts degree height) }
+
+let observeDegrees tree =
+    tree
+    |> RoseTree.traverse
+    |> List.map (RoseTree.children >> List.length)
+
+[<Fact>]
+let ``a tree can have variance over the degree`` () =
+    let trees =
+        Gen.tree (child ()) (Range.constant 1 2) (Range.linear 1 10)
+        |> Gen.sample 100 100
+    let degreeVarianceByTree =
+        trees
+        |> List.map (
+            observeDegrees
+            >> List.filter ((<>) 0) // Having no children doesn't count
+            >> List.variance)
+    test <@ degreeVarianceByTree
+            |> List.exists (fun degreeVariance -> degreeVariance > 1) @>

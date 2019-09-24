@@ -27,14 +27,24 @@ module Tree =
                     |> LazyList.map (expandTrivially expander) }
             StructuredShrinkingRoseTree (tree, reductions)
 
+module Random =
+
+    let rec concat (list : List<Random<'a>>) : Random<List<'a>> = random {
+        match list with
+        | [] -> return []
+        | r :: rs ->
+            let! r' = r
+            let! rs'= concat rs
+            return r' :: rs' }
+
 module Gen =
 
-    let rec private invertGens (gens : List<Gen<'a>>) : Gen<List<'a>> = gen {
+    let rec private concat (gens : List<Gen<'a>>) : Gen<List<'a>> = gen {
         match gens with
         | [] -> return []
         | x :: xs ->
             let! x' = x
-            let! xs' = invertGens xs
+            let! xs' = concat xs
             return x' :: xs' }
 
     let rec private listDistinctByInternal projection length generator results = gen {
@@ -53,20 +63,10 @@ module Gen =
     let private listDistinct range generator =
         listDistinctBy id range generator
 
-    let private eval seed size generator =
-        generator
-        |> Gen.toRandom
-        |> Random.run seed size
-        |> Tree.outcome
-
-    let private buildLevel parentNode nodeGenerator degree =
+    let private levelOfNodes parentNode nodeGenerator degree : Gen<List<'a>> =
         nodeGenerator parentNode
         |> listDistinct degree
         |> Gen.noShrink
-
-    let private evalLevel parentNode nodeGenerator degree seed size =
-        buildLevel parentNode nodeGenerator degree
-        |> eval seed size
 
     let private joinTrees root trees =
         let tree = RoseTree (root, trees |> List.map (Tree.outcome))
@@ -78,15 +78,21 @@ module Gen =
             else []
         Node (tree, shrinks |> LazyList.ofList)
  
-    let rec private buildTree nodeData nodeGenerator height degree seed size : Tree<RoseTree<'a>> =
+    let rec private buildTree nodeGenerator degree height node : Random<Tree<RoseTree<'a>>> =
         if height < 1 then raise (System.ArgumentException "height")
         else if height = 1 then
-            Node (RoseTree (nodeData, []), LazyList.empty)
+            Node (RoseTree (node, []), LazyList.empty)
+            |> Random.constant
         else
-            evalLevel (nodeData |> Some) nodeGenerator degree seed size
-            |> List.map (fun childNode -> buildTree childNode nodeGenerator (height - 1) degree seed size)
-            |> List.rev
-            |> joinTrees nodeData
+            let nodes =
+                levelOfNodes (node |> Some) nodeGenerator degree
+                |> Gen.toRandom
+                |> Random.map Tree.outcome
+            Random.bind nodes (
+                List.map (buildTree nodeGenerator degree (height - 1))
+                >> List.rev // Don't know why. Doesn't matter in real life but makes tests more digestible.
+                >> Random.concat
+                >> Random.map (joinTrees node))
 
     let private shrinkTree (reducible : Tree<RoseTree<'a>>) : StructuredShrinkingRoseTree<'a> =
         let shrinksToTrivialOf tree =
@@ -102,8 +108,7 @@ module Gen =
             let! height = Gen.int height |> Gen.noShrink
             let! root = node None
             return! 
-                buildTree root node height degree
-                |> Random
+                buildTree node degree height root
                 |> Random.map (shrinkTree >> StructuredShrinkingRoseTree.toTree)
                 |> Gen.ofRandom } 
 
@@ -120,7 +125,7 @@ module Gen =
         (node : 'a option -> Gen<'a>)
         (degree : Range<int>)
         (height : Range<int>) : Gen<List<RoseTree<'a>>> = gen {
-            let! roots = buildLevel None node degree
+            let! roots = levelOfNodes None node degree
             let! h = Gen.int height
             if h = 1
             then
@@ -134,4 +139,4 @@ module Gen =
                 return!
                     roots
                     |> List.map (fun x -> tree (funDefault node x) degree height')
-                    |> invertGens }
+                    |> concat }
