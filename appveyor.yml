@@ -1,0 +1,16 @@
+
+version: '0.0.1-alpha-{build}'
+configuration:
+- Release
+before_build:
+- appveyor-retry dotnet restore -v Minimal
+build_script:
+- dotnet build -c Release
+- dotnet test -c Release --no-build Hedgehog.Recursion.Tests/Hedgehog.Recursion.Tests.fsproj
+after_build:
+- dotnet pack -o ../artifacts -p:PackageVersion=%APPVEYOR_BUILD_VERSION% Hedgehog.Recursion/Hedgehog.Recursion.fsproj
+- ls artifacts
+- appveyor PushArtifact artifacts/Hedgehog.Recursion.%APPVEYOR_BUILD_VERSION%.nupkg
+- dotnet nuget push artifacts/Hedgehog.Recursion.%APPVEYOR_BUILD_VERSION%.nupkg -k %NUGET_API_KEY% -s https://api.nuget.org/v3/index.json
+artifacts:
+- path: artifacts\*.nupkg

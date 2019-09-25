@@ -1,4 +1,4 @@
-Hedgehog.Recursion
+Hedgehog.Recursion [![Build Status](https://travis-ci.org/nth-commit/Hedgehog.Recursion.svg?branch=master)](https://travis-ci.org/nth-commit/Hedgehog.Recursion)
 ========
 
 Hedgehog extensions for recursive data-structures:

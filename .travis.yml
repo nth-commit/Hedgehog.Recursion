@@ -1,0 +1,13 @@
+language: csharp
+mono: none
+dotnet: 2.2.402
+
+sudo: false
+
+script:
+  - dotnet build -c Release
+  - dotnet test -c Release --no-build Hedgehog.Recursion.Tests/Hedgehog.Recursion.Tests.fsproj
+
+branches:
+  only:
+    - master
