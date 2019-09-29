@@ -140,3 +140,6 @@ module Gen =
                     roots
                     |> List.map (fun x -> tree (funDefault node x) degree height')
                     |> concat }
+
+    let forestOfSize (node : 'a option -> Gen<'a>) (degree : int) (height : int) =
+        forest node (Range.singleton degree) (Range.singleton height)
